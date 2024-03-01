@@ -8,7 +8,7 @@ const Sidebar = () => {
         <hr className="border-gray-700 my-4" />
         <ul>
           <li>
-            <Link href="/dashboard">
+            <Link href="/">
               <div className="block py-2 px-4 hover:bg-gray-700 cursor-pointer rounded-md">Dashboard</div>
             </Link>
           </li>
@@ -18,8 +18,8 @@ const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <Link href="/teste">
-              <div className="block py-2 px-4 hover:bg-gray-700 cursor-pointer rounded-md">Teste</div>
+            <Link href="/users">
+              <div className="block py-2 px-4 hover:bg-gray-700 cursor-pointer rounded-md">Users</div>
             </Link>
           </li>
         </ul>

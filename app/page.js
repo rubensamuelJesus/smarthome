@@ -1,26 +1,29 @@
 "use client";
-import { useState } from 'react';
+import { useState, useContext , useEffect} from 'react';
 import Sidebar from '../components/Sidebar';
-import {signIn, useSession} from 'next-auth/react';
-import { redirect } from 'next/navigation';
-import { useRouter } from 'next/router';
-
+import {signIn, useSession, signOut} from 'next-auth/react';
+import { UserAuth } from '@/components/SessionProvider';
+import AdminCheck from '@/components/AdminCheck';
+import { AuthContext } from '@/components/SessionProvider';
 
 const Home = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   //const auth = useAuth();
   const [email, setEmail] = useState("assss@hotmail.com");
   const [password, setPassword] = useState("assss@hotmail.com");
-  const toggleSettings = () => {
-    setIsSettingsOpen(!isSettingsOpen);
-  };
+  //const { isAdmin , setIsAdmin } = useContext(AuthContext);
+  const { isAdmin , setIsAdmin } = useContext(AuthContext);
 
   const session = useSession({
     required: true,
-    onUnauthenticated(){
+    /*onUnauthenticated(){
       router.push('/signin');
-    }
+    }*/
   });
+  
+  const toggleSettings = () => {
+    setIsSettingsOpen(!isSettingsOpen);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -56,11 +59,14 @@ const Home = () => {
                 <circle cx="12" cy="7" r="4" />  
                 <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
               </svg>
-              {session?.user?.email ? (
-                <span>{session.user.email}</span>
+              {session?.data?.user ? (
+                <div>
+                  <span>{session?.data?.user?.email} ----- {isAdmin.toString()}</span>
+                </div>
               ) : (
                 <span>Login</span>
               )}
+
             </button>
 
 
@@ -79,6 +85,8 @@ const Home = () => {
         {/* Main content */}
         <main className="flex-1 p-10 overflow-y-auto">
           <h1 className="text-3xl font-semibold mb-5">Welcome to Your Next.js App</h1>
+          <div>{isAdmin}</div>
+
           <p>This is your main content area.</p>
         </main>
       </div>
@@ -102,5 +110,6 @@ const Home = () => {
     </div>
   );
 };
+
 Home.requireAuth = true
 export default Home;
