@@ -14,12 +14,13 @@ const Home = () => {
   //const { isAdmin , setIsAdmin } = useContext(AuthContext);
   const { isAdmin , setIsAdmin } = useContext(AuthContext);
 
-  const session = useSession({
-    required: true,
-    /*onUnauthenticated(){
-      router.push('/signin');
-    }*/
-  });
+  const session = useSession();
+
+  useEffect(() => {
+    console.log("aaaaaadaddaadad");
+    console.log(session);
+    console.log("aaaaaadaddaadad");
+}, [session]);
   
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
@@ -53,24 +54,29 @@ const Home = () => {
           <h1 className="text-2xl font-semibold">Your Next.js App</h1>
           <div className="flex items-center">
             { /*<button className="text-white flex items-center space-x-1" onClick={handleLogin} style={{ paddingRight: '10px' }}> */} 
-            <button className="text-white flex items-center space-x-1" onClick={() =>signIn( 'credentials',{email, password, redirect: false, callbackUrl: '/'})} style={{ paddingRight: '10px' }}>
+            {session?.data?.user ? (
+    <>
+      <span>{session?.data?.user?.email}</span>
+      <span>{session?.data?.user?.uid}</span>
+      <button onClick={() => signOut()}>Logout</button>
+    </>
+  ) : (
+    <>
+      <span>Login</span>
+      {/* Adicionei o SVG do login aqui */}
+      <svg className="h-6 w-6 text-white-500" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="7" r="4" />
+        <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+      </svg>
+      <button onClick={() => {}}>Login</button>
 
-              <svg class="h-6 w-6 text-white-500" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  
-                <circle cx="12" cy="7" r="4" />  
-                <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-              </svg>
-              {session?.data?.user ? (
-                <div>
-                  <span>{session?.data?.user?.email} ----- {isAdmin.toString()}</span>
-                </div>
-              ) : (
-                <span>Login</span>
-              )}
-
-            </button>
+    </>
+  )}
 
 
             <button className="text-white flex items-center space-x-2" onClick={toggleSettings} style={{ paddingLeft: '10px' }}>
+
+          
               <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
               </svg>
@@ -84,8 +90,8 @@ const Home = () => {
 
         {/* Main content */}
         <main className="flex-1 p-10 overflow-y-auto">
-          <h1 className="text-3xl font-semibold mb-5">Welcome to Your Next.js App</h1>
-          <div>{isAdmin}</div>
+          <h1 className="text-3xl font-semibold mb-5">Welcome to Yoaaaaaaur Next.js App</h1>
+          <p>{String(isAdmin)}</p>
 
           <p>This is your main content area.</p>
         </main>

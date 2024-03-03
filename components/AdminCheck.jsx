@@ -6,18 +6,13 @@ import { AuthContext } from '@/components/SessionProvider';
 
 const AdminCheck = () => {
     const { isAdmin , setIsAdmin } = useContext(AuthContext);
-    const session = useSession({
-        required: true,
-        /*onUnauthenticated(){
-            router.push('/signin');
-        }*/
-    });
+    const session = useSession();
 
     useEffect(() => {
         if(session?.data?.user?.email == "assss@hotmail.com"){
             setIsAdmin(true);
         }
-    }, [session]); // Este useEffect será executado toda vez que o valor de isAdmin mudar
+    }, [session]);
     
 
     return (

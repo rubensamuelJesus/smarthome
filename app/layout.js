@@ -1,9 +1,10 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Provider from "../components/SessionProvider";
-import AdminCheck from "@/components/AdminCheck";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import Home from "./page";
+import Signin from "./signin/page";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,13 +14,19 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
+  const session = await getServerSession(authOptions);
+  console.log("Session:", session);
+  console.log("yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
 
   return (
     <html lang='en'>
-    <body>
-      <Provider>
-        <AdminCheck />
-        <body className={inter.className}>{children}</body>
+    <body className={inter.className}>
+      <Provider session={session}>
+      {!session ? (
+          <Signin/>
+        ): (
+          <Home/>
+        )}
       </Provider>
     </body>
   </html>

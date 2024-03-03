@@ -1,40 +1,46 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
-import { db } from '/firebase/config';
 
-const DataTable = ({ endpoint , filters }) => {
+const DataTable = ({ endpoint, filters }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState(null);
   const [sortDirection, setSortDirection] = useState('asc');
   const [pageCursor, setPageCursor] = useState(null);
   const [pageSize] = useState(10);
+  const columnOrder = ['email', 'isAdmin', /* outras colunas */];
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [filters, sortBy, sortDirection]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(endpoint, {
+      let url = `${endpoint}?`;
+
+      if (Object.keys(filters).length > 0) {
+        const filterParams = new URLSearchParams(filters);
+        url += filterParams.toString() + '&';
+      }
+
+      if (sortBy) {
+        url += `sortBy=${sortBy}&sortDirection=${sortDirection}`;
+      }
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
         }
       });
-  
-      console.log("aararar");
-      const jsonData = await response.json(); // Aguarda a resolução da Promise para obter os dados reais
-      console.log(jsonData); // Exibe os dados reais recebidos da resposta JSON
-      console.log("aararar");
-  
+
       if (response.ok) {
+        const jsonData = await response.json();
         setData(jsonData);
       } else {
-        throw new Error('Erro ao obter dados dos usuários');
+        throw new Error('Erro ao obter dados');
       }
     } catch (error) {
       console.error('Erro:', error);
@@ -51,29 +57,39 @@ const DataTable = ({ endpoint , filters }) => {
     }
   };
 
+  const sortedData = data.slice().sort((a, b) => {
+    if (a[sortBy] < b[sortBy]) {
+      return sortDirection === 'asc' ? -1 : 1;
+    }
+    if (a[sortBy] > b[sortBy]) {
+      return sortDirection === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+
   return (
     <div className="p-6">
       <table className="w-full border-collapse border border-gray-800">
-        {/* Table header */}
         <thead>
-          <tr className="bg-gray-200">
-            {/* Render column headers based on the first item in data */}
-            {data.length > 0 && Object.keys(data[0]).map((key, index) => (
-              <th key={index} className="border border-gray-800 px-4 py-2">{key}</th>
+          <tr className="bg-gray-800 text-white"> {/* Aqui está a mudança */}
+            {columnOrder.map((key, index) => (
+              <th key={index} className="border border-gray-800 px-4 py-2" onClick={() => handleSort(key)}>
+                {key} {sortBy === key && (
+                  sortDirection === 'asc' ? '↑' : '↓'
+                )}
+              </th>
             ))}
           </tr>
         </thead>
-        {/* Table body */}
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={data.length > 0 ? Object.keys(data[0]).length : 1} className="text-center py-4">Loading...</td>
+              <td colSpan={columnOrder.length} className="text-center py-4">Loading...</td>
             </tr>
           ) : (
-            data.map((item, index) => (
+            sortedData.map((item, index) => (
               <tr key={index}>
-                {/* Render table cells based on the keys in the first item */}
-                {Object.keys(item).map((key, index) => (
+                {columnOrder.map((key, index) => (
                   <td key={index} className="border border-gray-800 px-4 py-2">
                     {typeof item[key] === 'boolean' ? (item[key] ? 'Yes' : 'No') : item[key]}
                   </td>
@@ -85,8 +101,6 @@ const DataTable = ({ endpoint , filters }) => {
       </table>
     </div>
   );
-  
-  
 };
 
 export default DataTable;
