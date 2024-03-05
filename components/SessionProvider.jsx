@@ -9,8 +9,10 @@ const Provider = ({ children, session}) => {
   const [user, setUser] = useState();
 
   useEffect(() => {
-    if(session?.user?.email == "assss@hotmail.com"){
+    if(session?.user?.isAdmin){
         setIsAdmin(true);
+    }else{
+      setIsAdmin(false);
     }
   }, [session]);
 

@@ -1,26 +1,43 @@
 "use client";
 import { useState, useContext , useEffect} from 'react';
 import Sidebar from '../components/Sidebar';
-import {signIn, useSession, signOut} from 'next-auth/react';
-import { UserAuth } from '@/components/SessionProvider';
-import AdminCheck from '@/components/AdminCheck';
+import {useSession, signOut} from 'next-auth/react';
 import { AuthContext } from '@/components/SessionProvider';
+import Card from '@/components/Card';
 
 const Home = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  //const auth = useAuth();
   const [email, setEmail] = useState("assss@hotmail.com");
   const [password, setPassword] = useState("assss@hotmail.com");
-  //const { isAdmin , setIsAdmin } = useContext(AuthContext);
   const { isAdmin , setIsAdmin } = useContext(AuthContext);
+  const [cards, setCards] = useState([]);
 
   const session = useSession();
 
   useEffect(() => {
-    console.log("aaaaaadaddaadad");
-    console.log(session);
-    console.log("aaaaaadaddaadad");
-}, [session]);
+    console.log("rtrtrtrtrtrttttt");
+    if (session.data) {
+      fetchCards();
+    }
+  }, [session]);
+
+  const fetchCards = async () => {
+    if (session.data) {
+      const uid = session.data.user.uid; // Obtém o UID do usuário da sessão
+      try {
+        // Fazer a chamada à API aqui, incluindo o UID do usuário na URL
+        const response = await fetch(`/cards/api/${uid}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCards(data); // Atualiza o estado com os dados dos cards obtidos da API
+        } else {
+          throw new Error('Erro ao obter dados da API');
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+      }
+    }
+  };
   
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
@@ -55,28 +72,26 @@ const Home = () => {
           <div className="flex items-center">
             { /*<button className="text-white flex items-center space-x-1" onClick={handleLogin} style={{ paddingRight: '10px' }}> */} 
             {session?.data?.user ? (
-    <>
-      <span>{session?.data?.user?.email}</span>
-      <span>{session?.data?.user?.uid}</span>
-      <button onClick={() => signOut()}>Logout</button>
-    </>
-  ) : (
-    <>
-      <span>Login</span>
-      {/* Adicionei o SVG do login aqui */}
-      <svg className="h-6 w-6 text-white-500" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="7" r="4" />
-        <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-      </svg>
-      <button onClick={() => {}}>Login</button>
+              <>
+                <span>{session?.data?.user?.email}</span>
+                <span>{session?.data?.user?.uid}</span>
+                <button onClick={() => signOut()}>Logout</button>
+              </>
+            ) : (
+              <>
+                <span>Login</span>
+                {/* Adicionei o SVG do login aqui */}
+                <svg className="h-6 w-6 text-white-500" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="7" r="4" />
+                  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                </svg>
+                <button onClick={() => {}}>Login</button>
 
-    </>
-  )}
+              </>
+            )}
 
 
             <button className="text-white flex items-center space-x-2" onClick={toggleSettings} style={{ paddingLeft: '10px' }}>
-
-          
               <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
               </svg>
@@ -90,11 +105,16 @@ const Home = () => {
 
         {/* Main content */}
         <main className="flex-1 p-10 overflow-y-auto">
-          <h1 className="text-3xl font-semibold mb-5">Welcome to Yoaaaaaaur Next.js App</h1>
-          <p>{String(isAdmin)}</p>
-
+          <h1 className="text-3xl font-semibold mb-5">Welcome to Your Next.js App</h1>
           <p>This is your main content area.</p>
+          <p>{cards.length}</p>
+          
+          {/* Renderizando os cards */}
+          {cards.map((card, index) => (
+            <Card key={index} type={card.type} data={card.data} />
+          ))}
         </main>
+
       </div>
 
       {/* Settings sidebar */}

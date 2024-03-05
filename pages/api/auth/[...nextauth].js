@@ -36,7 +36,10 @@ export const authOptions = {
       if (user) {
         token.uid = user.uid; // Adicione o UID do usuário ao token JWT
         // Verifique se o usuário é um administrador e adicione a flag isAdmin ao token JWT
-        const isAdmin = await getAdminStatusByEmail(user.email);
+        console.log("dtdtdtdtd");
+        console.log(String(user.email));
+        console.log("dtdtdtdtd");
+        const isAdmin = await getAdminStatusByEmail(String(user.email));
         token.isAdmin = isAdmin;
       }
       return token;
