@@ -1,6 +1,17 @@
- /* return (
-    <div className="w-3/5 bg-grey-lightest shadow rounded pb-4 bg-cover" style={{ color: '#606F7B', backgroundColor: 'rgb(165, 182, 198)', backgroundImage: "url('https://68.media.tumblr.com/f6a4004f3092b0d664daeabb95d5d195/tumblr_oduyciOJNb1uhjffgo1_500.gif')" }}>
-      <div className="mt-2 p-4 border-b border-transparent text-center">}
+import React, { useState, useEffect } from 'react';
+
+const SensorCard = () => {
+  return (
+    <div className="w-1/5 max-w-full px-3 mt-6 sm:w-1/5 lg:w-1/5 sm:mt-0">
+      {/* Renderização do card do sensor */}
+    </div>
+  );
+};
+
+const WeatherCard = ({ width }) => {
+  return (
+    <div className="px-3 mt-6 m-3 sm:w-3/5 lg:w-3/5 sm:mt-0 rounded-2xl" style={{ width: `${width}px`, color: '#606F7B', backgroundColor: 'rgb(165, 182, 198)', backgroundImage: "url('https://68.media.tumblr.com/f6a4004f3092b0d664daeabb95d5d195/tumblr_oduyciOJNb1uhjffgo1_500.gif')", backgroundRepeat: 'no-repeat', backgroundSize: 'cover', padding: '20px' }}>
+      <div className="p-4 border-b border-transparent text-center">
         <span className="text-4xl font-thin">Mountain View, US</span>
         <span className="hidden sm:inline-block align-bottom text-xs">( 94041 )</span>
       </div>
@@ -22,11 +33,11 @@
       </div>
     </div>
   );
-};*/
+};
 
-const Card = () => {
+const ActuatorCard = ({ width }) => {
   return (
-    <div className="w-1/5 max-w-full px-3 mt-6 sm:flex-0 shrink-0 sm:w-6/12 lg:w-2/12 sm:mt-0">
+    <div className="mt-6 sm:w-600 lg:w-600 sm:mt-0" style={{ padding: '10px' , width: `${width}px`}}>
       <div className="border-black/12.5 bg-gray-800 dark:shadow-dark-xl shadow-xl relative flex h-full min-w-0 flex-col break-words rounded-2xl border-0 border-solid bg-clip-border">
         <div className="flex-auto p-6">
           <div className="flex mb-4">
@@ -102,5 +113,45 @@ const Card = () => {
   );
 };
 
-export default Card;
 
+const sidebarWidth = 256; // Largura da barra lateral
+
+const Card = ({ type }) => {
+  const [windowWidth, setWindowWidth] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth;
+    }
+    return 0;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Calcula a largura disponível descontando a largura da barra lateral
+  const availableWidth = windowWidth - sidebarWidth;
+
+  // Calcula as larguras dos cartões com base na largura disponível
+  const firstCardWidth = availableWidth * 0.6;
+  const secondCardWidth = availableWidth * 0.3;
+
+  if (type === 'sensor') {
+    return <SensorCard width={secondCardWidth} />;
+  } else if (type === 'actuator') {
+    return <ActuatorCard width={secondCardWidth} />;
+  } else if (type === 'weather') {
+    return <WeatherCard width={firstCardWidth} />;
+  } else {
+    return <div className="w-1/5" />;
+  }
+};
+
+export default Card;
