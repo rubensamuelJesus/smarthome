@@ -1,20 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import GaugeComponent from 'react-gauge-component'
 
-const SensorCard = () =>{
-  const kbitsToMbits = (value) => {
-    if (value >= 1000) {
-      value = value / 1000;
-      if (Number.isInteger(value)) {
-        return value.toFixed(0) + ' mbit/s';
-      } else {
-        return value.toFixed(1) + ' mbit/s';
-      }
-    } else {
-      return value.toFixed(0) + ' kbit/s';
-    }
-  }
-
+const SensorCard = ({ value }) => {
   return (
     <div className="flex flex-col">
       <div className="flex-auto p-4 rounded-2xl border-black/12.5 bg-gray-800 dark:shadow-dark-xl shadow-xl relative flex min-w-0 flex-col break-words border-0 border-solid bg-clip-border">
@@ -28,23 +15,13 @@ const SensorCard = () =>{
                   showTick: true
                 },
               ],              
-              //nbSubArcs: 150,
-              //colorArray: ['#5BE12C', '#F5CD19', '#EA4228'],
-              width: 0.3,
-              padding: 0.003
             }}
-            labels={{
-              valueLabel: {
-                fontSize: 40,
-                formatTextValue: kbitsToMbits
-              },
-            }}
-            value={50}
+            value={value}
             maxValue={140}
             tickLabels={{
               hide: true // Esconder o rótulo do tick
             }}
-            pointer={{type: "arrow", elastic: true}}
+            pointer={{elastic: true}}
           />
         </div>
       </div>
@@ -81,7 +58,7 @@ const WeatherCard = ({ width }) => {
   );
 };
 
-const ActuatorCard = ({ width }) => {
+const ActuatorCard = ({ value, onClick }) => {
   return (
     <div className="flex flex-col">
       <div className="flex-auto p-4 rounded-2xl border-black/12.5 bg-gray-800 dark:shadow-dark-xl shadow-xl relative flex min-w-0 flex-col break-words border-0 border-solid bg-clip-border">
@@ -89,11 +66,23 @@ const ActuatorCard = ({ width }) => {
           <div className="flex mb-4">
             <p className="mb-0 text-white">On</p>
             <div className="min-h-6 mb-0.5 ml-auto block pl-12">
-              <input
-                checked=""
-                className="rounded-full duration-250 mt-0.5 ease-in-out after:rounded-full after:shadow-2xl after:duration-250 checked:after:translate-x-5.3 h-5 relative float-left -ml-12 w-10 cursor-pointer appearance-none border border-solid border-gray-200 bg-slate-800/10 bg-none bg-contain bg-left bg-no-repeat align-top transition-all after:absolute after:top-px after:h-4 after:w-4 after:translate-x-px after:bg-white after:content-[''] checked:border-blue-500/95 checked:bg-blue-500/95 checked:bg-none checked:bg-right"
-                type="checkbox"
+            
+            
+            <label class="relative inline-flex cursor-pointer items-center">
+              <input 
+                id="switch" 
+                type="checkbox" 
+                class="peer sr-only" 
+                onChange={(e) => {
+                  onClick(e.target.checked);
+                }}
+                checked={value} // Desmarcar inicialmente o checkbox
               />
+              <label for="switch" class="hidden"></label>
+              <div class="peer h-6 w-11 rounded-full border bg-slate-200 after:absolute after:left-[2px] after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-slate-800 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-green-300"></div>
+            </label>
+
+
             </div>
           </div>
           <svg
@@ -160,40 +149,11 @@ const ActuatorCard = ({ width }) => {
   );
 };
 
-
-const sidebarWidth = 256; // Largura da barra lateral
-
-const Card = ({ type }) => {
-  const [windowWidth, setWindowWidth] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth;
-    }
-    return 0;
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  // Calcula a largura disponível descontando a largura da barra lateral
-  const availableWidth = windowWidth - sidebarWidth;
-
-  // Calcula as larguras dos cartões com base na largura disponível
-  const firstCardWidth = availableWidth * 0.6;
-  const secondCardWidth = availableWidth * 0.3;
-
+const Card = ({ type, value, onClick }) => {
   if (type === 'sensor') {
-    return <SensorCard />;
+    return <SensorCard value={value} />;
   } else if (type === 'actuator') {
-    return <ActuatorCard  />;
+    return <ActuatorCard onClick={onClick} value={value}/>;
   } else if (type === 'weather') {
     return <WeatherCard />;
   } else {

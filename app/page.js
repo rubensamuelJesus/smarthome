@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import {useSession, signOut} from 'next-auth/react';
 import { AuthContext } from '@/components/SessionProvider';
 import Card from '@/components/Card';
+import io from 'socket.io-client';
 
 const Home = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -17,9 +18,28 @@ const Home = () => {
   useEffect(() => {
     console.log("rtrtrtrtrtrttttt");
     if (session.data) {
+      const socket = setupSocket();
       fetchCards();
+  
+      // Desconectar ao desmontar o componente
+      return () => {
+        socket.disconnect();
+      };
     }
   }, [session]);
+
+  // Função para configurar o socket
+  const setupSocket = () => {
+    // Conectar ao servidor Socket.IO
+    const socket = io("http://192.168.1.90:5000");
+  
+    // Exemplo: Ouça um canal específico
+    //socket.on("canalTempCilindro", (data) => {
+    //  console.log("Recebeu uma mensagem do canal:", data);
+    //});
+  
+    return socket; // Retorna o objeto de socket
+  };
 
   const fetchCards = async () => {
     if (session.data) {
@@ -42,43 +62,44 @@ const Home = () => {
         if (response.ok) {
             const data = await response.json();
             setCards(data); // Atualiza o estado com os dados dos cards obtidos da API
+
+            setupSocketListenersForCards();
         } else {
             throw new Error('Erro ao obter dados da API');
         }
     } catch (error) {
         console.error('Erro:', error);
     }
-    
-
-
     }
   };
-  
+
+  const setupSocketListenersForCards = () => {
+    console.log("vvvvvvvvvvvvvvvvvvv");
+
+    cards.forEach(card => {
+      console.log("ttttttt");
+      console.log(card.type == "sensor");
+      console.log("ttttttt");
+      if (card.type == "sensor") {
+        const channel = card.channel; // Obtém o canal do card
+        
+        // Configura o ouvinte de eventos Socket.IO para o canal
+        const socketListener = (data) => {
+          console.log(`Recebeu uma mensagem do canaljjjjjj ${channel}:`, data);
+        };
+    
+        // Registra o ouvinte de eventos Socket.IO para o canal
+        socket.on(channel, socketListener);
+      }
+    });
+  };
+
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const user = await auth?.loginEmailPassword(email, password);
-      if (user !== null) {
-        console.log("Login bem-sucedido!");
-        console.log(user);
-        // Faça qualquer ação adicional com o usuário
-      } else {
-        console.log("Erro durante o login");
-      }
-    } catch (error) {
-      console.error("Erro durante o login:", error);
-    }
-  };
-
   return (
     <div className="m-0 font-sans text-base antialiased font-normal text-left leading-default text-slate-500 dark:text-white">
-
-
-
     <Sidebar />
 
     <main className="relative h-full transition-all duration-200 ease-in-out xl:ml-68 rounded-xl ps ps--active-y">
@@ -105,9 +126,16 @@ const Home = () => {
               case 'weather':
                 return <Card type="weather" />;
               case 'actuator':
-                return <Card type="actuator" />
+                return <Card type="actuator" onClick={(isChecked) => {
+                  if (isChecked) {
+                    console.log("Atuador ativado");
+                  } else {
+                    console.log("Atuador desativado");
+                  }
+                }}
+                />;
               case 'sensor':
-                return <Card type="sensor" />
+                return <Card type="sensor" value={60} />;
               default:
                 return null; // Ou renderiza outro componente ou nada, dependendo da necessidade
             }
