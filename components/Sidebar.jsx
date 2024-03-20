@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 const Sidebar = () => {
   return (
-    <aside className="bg-gray-800 text-gray-100 w-64 rounded-lg overflow-hidden shadow-lg ml-4 mt-4 mb-4" style={{ height: "calc(100vh - 2rem)" }}>
-      <div className="p-5">
+    <aside className="fixed inset-y-0 left-0 flex-wrap items-center justify-between block bg-gray-800 w-full p-0 my-4 overflow-y-auto transition-all duration-200 ease-in-out -translate-x-full border-0 shadow-xl dark:shadow-none xl:ml-6 dark:bg-slate-850 z-9999 max-w-64 rounded-2xl xl:translate-x-0 ps" id="sidenav-main" style={{ zIndex: 9999 }}>
+    <div className="p-5">
         <h2 className="text-2xl font-semibold mb-4">Menu</h2>
         <hr className="border-gray-700 my-4" />
         <ul>

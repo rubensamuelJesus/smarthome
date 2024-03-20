@@ -4,7 +4,6 @@ import Sidebar from '../components/Sidebar';
 import {useSession, signOut} from 'next-auth/react';
 import { AuthContext } from '@/components/SessionProvider';
 import Card from '@/components/Card';
-import Cards from './cards/page';
 
 const Home = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -25,18 +24,33 @@ const Home = () => {
   const fetchCards = async () => {
     if (session.data) {
       const uid = session.data.user.uid; // Obtém o UID do usuário da sessão
+
+
       try {
-        // Fazer a chamada à API aqui, incluindo o UID do usuário na URL
-        const response = await fetch(`/cards/api/${uid}`);
+        // Defina o critério de ordenação desejado
+        const order = {
+          field: 'type', // Campo de ordenação (por exemplo, 'type' para tipo de cartão)
+          direction: 'asc' // Direção da ordenação ('asc' para ascendente, 'desc' para descendente)
+        };
+    
+        // Constrói a URL da API com o UID do usuário e o critério de ordenação
+        const url = `/cards/api/${uid}?order=${JSON.stringify(order)}`;
+    
+        // Faz a chamada à API incluindo o UID do usuário e o critério de ordenação na URL
+        const response = await fetch(url);
+        
         if (response.ok) {
-          const data = await response.json();
-          setCards(data); // Atualiza o estado com os dados dos cards obtidos da API
+            const data = await response.json();
+            setCards(data); // Atualiza o estado com os dados dos cards obtidos da API
         } else {
-          throw new Error('Erro ao obter dados da API');
+            throw new Error('Erro ao obter dados da API');
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Erro:', error);
-      }
+    }
+    
+
+
     }
   };
   
@@ -61,12 +75,13 @@ const Home = () => {
   };
 
   return (
-    <div className="flex">
-    {/* Sidebar */}
+    <div className="m-0 font-sans text-base antialiased font-normal text-left leading-default text-slate-500 dark:text-white">
+
+
+
     <Sidebar />
 
-    {/* Main content */}
-    <div className="flex flex-col flex-1">
+    <main className="relative h-full transition-all duration-200 ease-in-out xl:ml-68 rounded-xl ps ps--active-y">
       {/* Navbar */}
       <nav className="bg-transparent text-gray-100 p-4 flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Your Next.js App</h1>
@@ -81,32 +96,40 @@ const Home = () => {
         </div>
       </nav>
 
-      {/* Título e conteúdo principal */}
-      <div className="p-4">
-        <h1 className="text-3xl font-semibold mb-5">Welcome to Your Next.js App</h1>
-        <p>This is your main content area.</p>
-      </div>
 
-      {/* Cards */}
-      <div className="flex flex-wrap">
-        <Card type="weather" />
-        <Card type="actuator" />
-        <Card type="actuator" />
-      </div>
-    </div>
+        <div className="w-full p-6 mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
 
-    {/* Settings sidebar */}
-    <div className={`fixed inset-0 z-50 transition-transform duration-500 ease-in-out ${isSettingsOpen ? 'transform translate-x-0' : 'transform translate-x-full  w-0'}`}>
-      <div className="h-screen w-80 bg-white fixed top-0 right-0 shadow-lg">
-        <div className="p-4">
-          <h2 className="text-xl font-semibold mb-4">Settings</h2>
-          {/* Add settings content here */}
-          <button className="text-red-500" onClick={toggleSettings}>Close</button>
+          {cards.map((card) => {
+            // Determina qual tipo de card é com base no tipo do item
+            switch (card.type) {
+              case 'weather':
+                return <Card type="weather" />;
+              case 'actuator':
+                return <Card type="actuator" />
+              case 'sensor':
+                return <Card type="sensor" />
+              default:
+                return null; // Ou renderiza outro componente ou nada, dependendo da necessidade
+            }
+          })}
+
+
+          {/* Settings sidebar */}
+          <div className={`fixed inset-0 z-50 transition-transform duration-500 ease-in-out ${isSettingsOpen ? 'transform translate-x-0' : 'transform translate-x-full  w-0'}`}>
+            <div className="h-screen w-80 bg-white fixed top-0 right-0 shadow-lg">
+              <div className="p-4">
+                <h2 className="text-xl font-semibold mb-4">Settings</h2>
+                {/* Add settings content here */}
+                <button className="text-red-500" onClick={toggleSettings}>Close</button>
+              </div>
+            </div>
+            <div className="fixed inset-0 bg-gray-800 bg-opacity-0" onClick={toggleSettings}></div>
+            
+          </div>
+
         </div>
-      </div>
-      <div className="fixed inset-0 bg-gray-800 bg-opacity-0" onClick={toggleSettings}></div>
+      </main>
     </div>
-  </div>
   );
 };
 

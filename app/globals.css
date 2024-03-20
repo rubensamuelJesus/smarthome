@@ -16,6 +16,13 @@
   }
 }
 
+@media (min-width: 1280px) {
+  .xl\:ml-68 {
+    margin-left: 17rem;
+  }
+}
+
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
@@ -31,3 +38,7 @@ body {
     text-wrap: balance;
   }
 }
+
+
+
+
