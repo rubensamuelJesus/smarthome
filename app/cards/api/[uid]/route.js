@@ -28,6 +28,8 @@ export async function GET(request, params) {
         const responseBody = [];
         querySnapshot.forEach((doc) => {
             const cardData = doc.data();
+            // Adiciona o ID do documento como uma propriedade em cada cartão
+            cardData.id = doc.id;
             responseBody.push(cardData);
         });
 

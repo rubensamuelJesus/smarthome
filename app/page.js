@@ -5,47 +5,59 @@ import {useSession, signOut} from 'next-auth/react';
 import { AuthContext } from '@/components/SessionProvider';
 import Card from '@/components/Card';
 import io from 'socket.io-client';
+import axios from 'axios';
 
 const Home = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [email, setEmail] = useState("assss@hotmail.com");
   const [password, setPassword] = useState("assss@hotmail.com");
   const { isAdmin , setIsAdmin } = useContext(AuthContext);
-  const [cards, setCards] = useState([]);
 
-  const session = useSession();
 
-  useEffect(() => {
-    console.log("rtrtrtrtrtrttttt");
+
+const [cards, setCards] = useState([]);
+const [fetchedData, setFetchedData] = useState(false); // Flag para controlar se o fetchData já foi acionado
+
+const session = useSession();
+const [socket, setSocket] =  useState(undefined);
+
+useEffect(() => {
+  const fetchData = async () => {
     if (session.data) {
-      const socket = setupSocket();
-      fetchCards();
-  
+      const socketLo = setupSocket();
+      setSocket(socketLo);
+      fetchCards(socketLo);
+      
       // Desconectar ao desmontar o componente
       return () => {
         socket.disconnect();
       };
     }
-  }, [session]);
+  };
+
+  // Verificar se a sessão mudou antes de chamar fetchData novamente
+  if (session.data && !fetchedData) { // Verifica se a flag fetchedData é falsa
+    fetchData();
+    setFetchedData(true); // Define a flag fetchedData como true após a primeira chamada do fetchData
+  }
+
+}, [session, fetchedData]); // Adicionando session e fetchedData como dependências
+
+
 
   // Função para configurar o socket
   const setupSocket = () => {
     // Conectar ao servidor Socket.IO
-    const socket = io("http://192.168.1.90:5000");
-  
-    // Exemplo: Ouça um canal específico
-    //socket.on("canalTempCilindro", (data) => {
-    //  console.log("Recebeu uma mensagem do canal:", data);
-    //});
-  
+    const socket = io("http://192.168.1.90:5000");  
     return socket; // Retorna o objeto de socket
   };
 
-  const fetchCards = async () => {
+  const fetchCards = async (socket) => {
+    console.log("lkjkhhkjjhkhjhjk");
+    console.log(socket == undefined);
+    console.log("lkjkhhkjjhkhjhjk");
     if (session.data) {
       const uid = session.data.user.uid; // Obtém o UID do usuário da sessão
-
-
       try {
         // Defina o critério de ordenação desejado
         const order = {
@@ -60,10 +72,9 @@ const Home = () => {
         const response = await fetch(url);
         
         if (response.ok) {
-            const data = await response.json();
-            setCards(data); // Atualiza o estado com os dados dos cards obtidos da API
-
-            setupSocketListenersForCards();
+          const data = await response.json();
+          await setCards(data);
+          setupSocketListenersForCards(data, socket);
         } else {
             throw new Error('Erro ao obter dados da API');
         }
@@ -73,26 +84,49 @@ const Home = () => {
     }
   };
 
-  const setupSocketListenersForCards = () => {
-    console.log("vvvvvvvvvvvvvvvvvvv");
-
-    cards.forEach(card => {
-      console.log("ttttttt");
-      console.log(card.type == "sensor");
-      console.log("ttttttt");
-      if (card.type == "sensor") {
-        const channel = card.channel; // Obtém o canal do card
-        
-        // Configura o ouvinte de eventos Socket.IO para o canal
-        const socketListener = (data) => {
-          console.log(`Recebeu uma mensagem do canaljjjjjj ${channel}:`, data);
-        };
-    
-        // Registra o ouvinte de eventos Socket.IO para o canal
-        socket.on(channel, socketListener);
-      }
-    });
+  const setupSocketListenersForCards = (cardsData, socket) => {
+    if (socket !== undefined) { // Verifica se socket está definido
+      cardsData.forEach((card, index) => { // Adiciona o índice para referenciar o card específico
+        const { type, channel } = card; // Extrai o tipo e o nome do canal do card
+        if (type === "sensor" && channel) {
+          // Configura o ouvinte de eventos Socket.IO para o canal
+          socket.on(channel, (data) => {
+            console.log(`Recebeu uma mensagem do canal ${channel}:`, data);
+            // Cria uma cópia do array de cartões
+            const updatedCards = [...cardsData];
+            // Atualiza o valor no cartão com o valor recebido, arredondado para duas casas decimais
+            updatedCards[index] = { ...card, value: parseFloat(data).toFixed(2) };
+            // Atualiza o estado dos cartões
+            setCards(updatedCards);
+          });
+        } else if(type === "weather"){
+          getWeatherData(card.city);
+        }
+      });
+    }
   };
+
+  const getWeatherData = async (cityName) => {
+    try {
+      const url = `https://weatherapi-com.p.rapidapi.com/current.json?q=${cityName}`;
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
+            'X-RapidAPI-Key': '6a5ca6bcc7msh254a5eccedf4b40p1f9b60jsn8d922cdd43c9',
+            'Content-Type': 'application/json'
+          }
+      });
+
+      setWeatherData(response.data);
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+    }
+  };
+  
+  
+  
 
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
@@ -118,28 +152,34 @@ const Home = () => {
       </nav>
 
 
-        <div className="w-full p-6 mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="w-full p-6 mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        {cards.map((card) => {
+          // Determina qual tipo de card é com base no tipo do item
+          switch (card.type) {
+            case 'weather':
+              return <Card key={card.id} type="weather" />;
+            case 'actuator':
+              return (
+                <Card
+                    key={card.id}
+                    type="actuator"
+                    name={card.nome}
+                    onClick={() => {
+                      const newValue = card.value ? false : true; // Calcula o valor oposto ao valor atual
+                      console.log(`Emitted value for card ${card.id}: ${newValue}`);
+                      // Emite o novo valor para o canal do cartão
+                      socket.emit(card.channel, newValue);
+                    }}
+                  />
 
-          {cards.map((card) => {
-            // Determina qual tipo de card é com base no tipo do item
-            switch (card.type) {
-              case 'weather':
-                return <Card type="weather" />;
-              case 'actuator':
-                return <Card type="actuator" onClick={(isChecked) => {
-                  if (isChecked) {
-                    console.log("Atuador ativado");
-                  } else {
-                    console.log("Atuador desativado");
-                  }
-                }}
-                />;
-              case 'sensor':
-                return <Card type="sensor" value={60} />;
-              default:
-                return null; // Ou renderiza outro componente ou nada, dependendo da necessidade
-            }
-          })}
+
+              );
+            case 'sensor':
+              return <Card key={card.id} type="sensor" value={card.value} name={card.nome}/>;
+            default:
+              return null; // Ou renderiza outro componente ou nada, dependendo da necessidade
+          }
+        })}
 
 
           {/* Settings sidebar */}
