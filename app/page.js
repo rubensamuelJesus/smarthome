@@ -100,28 +100,36 @@ useEffect(() => {
             setCards(updatedCards);
           });
         } else if(type === "weather"){
-          getWeatherData(card.city);
+          getWeatherData(card.city, index, cardsData);
         }
       });
     }
   };
 
-  const getWeatherData = async (cityName) => {
+  const getWeatherData = async (cityName, index, cardsData) => { // Recebe cardsData como argumento
     try {
       const url = `https://weatherapi-com.p.rapidapi.com/current.json?q=${cityName}`;
-
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
-            'X-RapidAPI-Key': '6a5ca6bcc7msh254a5eccedf4b40p1f9b60jsn8d922cdd43c9',
-            'Content-Type': 'application/json'
-          }
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
+          'X-RapidAPI-Key': '6a5ca6bcc7msh254a5eccedf4b40p1f9b60jsn8d922cdd43c9',
+          'Content-Type': 'application/json'
+        }
       });
+      const weatherData = await response.json();
+  
+      // Atualiza os dados do cartão no cardsData
+      const updatedCardsData = [...cardsData];
+      updatedCardsData[index] = { ...cardsData[index], value: weatherData.value };
+      setCards(updatedCardsData); // Atualiza o estado dos cartões no componente
 
-      setWeatherData(response.data);
+      console.log("sststststst");
+      console.log(updatedCardsData);
+      console.log("sststststst");
+  
     } catch (error) {
-      console.error('Error fetching weather data:', error);
+      console.error('Erro ao buscar os dados meteorológicos:', error);
     }
   };
   
